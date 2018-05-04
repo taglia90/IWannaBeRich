@@ -18,9 +18,13 @@ strat.init = function () {
   this.name = 'IWannaBeRich';
   this.nsamples = 0;
   this.trend = {
-    zone: 'none',  // none, top, high, low, bottom
+    //zone: 'none',  // none, top, high, low, bottom
     duration: 0,
-    persisted: false
+    persisted: false,
+    direction: '', //up, down
+    adviced: false 
+  //  max: 0,
+  //  min: 0
   };
 
   this.requiredHistory = this.tradingAdvisor.historySize;
@@ -34,7 +38,16 @@ strat.init = function () {
 
 // what happens on every new candle?
 strat.update = function(candle) {
-  // nothing!
+  // 
+  /*this.trend = {
+    //zone: this.trend.zone, 
+    duration: this.trend.duration,
+    persisted: this.trend.persisted,
+    direction: 
+    adviced: this.trend.adviced
+    //max: Math.max(this.trend.max, candle.close),
+    //min: Math.min(this.trend.min, candle.close)
+  }*/
 }
 
 // for debugging purposes log the last
@@ -93,44 +106,68 @@ strat.check = function (candle) {
   var macd = this.indicators.macd;
   var macddiff = this.indicators.macd.result;
 
-  // price Zone detection
-  var zone = 'none';
-  if (price >= bb.upper) zone = 'top';
-  if ((price < bb.upper) && (price >= bb.middle)) zone = 'high';
-  if ((price > bb.lower) && (price < bb.middle)) zone = 'low';
-  if (price <= bb.lower) zone = 'bottom';
-  log.debug('current zone:  ', zone);
-  log.debug('current trend duration:  ', this.trend.duration);
+  //uptrend
+  if (price <= bb.middle && rsiVal <= this.settings.rsi.low && macddiff > this.settings.macd.up) {
+      // new trend detected
+      if(this.trend.direction !== 'up'){
+         // reset the state for the new trend
+        this.trend = {
+          duration: 0,
+          persisted: false,
+          direction: 'up',
+          adviced: false
+        };
+      }
+      this.trend.duration++;
+      log.debug('In uptrend since', this.trend.duration, 'candle(s)');
 
-  if (this.trend.zone == zone) {
-    this.trend = {
-      zone: zone,  // none, top, high, low, bottom
-      duration: this.trend.duration+1,
-      persisted: true
-    }
+      if(this.trend.duration >= this.settings.rsi.persistence && this.trend.duration >= this.settings.macd.persistence){
+          this.trend.persisted = true;
+      }
+
+      if(this.trend.persisted && !this.trend.adviced) {
+        this.trend.adviced = true;
+        this.advice('long');
+      } else
+        this.advice();
+      
+      return;
   }
-  else {
-    this.trend = {
-      zone: zone,  // none, top, high, low, bottom
+  
+  //downtrend
+  if (price > bb.middle && rsiVal >= this.settings.rsi.high && macddiff < this.settings.macd.down) {
+    // new trend detected
+    if(this.trend.direction !== 'down'){
+      // reset the state for the new trend
+      this.trend = {
       duration: 0,
-      persisted: false
+      persisted: false,
+      direction: 'down',
+      adviced: false
+      };
     }
+
+    this.trend.duration++;
+
+    log.debug('In downtrend since', this.trend.duration, 'candle(s)');
+
+    if(this.trend.duration >= this.settings.rsi.persistence && this.trend.duration >= this.settings.macd.persistence){
+      this.trend.persisted = true;
+    }
+
+    if(this.trend.persisted && !this.trend.adviced) {
+      this.trend.adviced = true;
+      this.advice('short');
+    } else
+      this.advice();
+
+    return;
   }
 
-  if (price <= bb.lower 
-      && rsiVal <= this.settings.thresholds.low 
-      && this.trend.duration >= this.settings.thresholds.persistence) {
-    this.advice('long')
-  }
-  if (price >= bb.middle 
-      && rsiVal >= this.settings.thresholds.high) {
-    this.advice('short')
-  }
+  //no trend
+  this.trend.advice = '';
+  this.advice();
 
-  // this.trend = {
-  //   zone: zone,  // none, top, high, low, bottom
-  //   duration: 0,
-  //   persisted: false
 }
 
 
