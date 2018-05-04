@@ -1,0 +1,19 @@
+interval = 14 #rsi indicator
+short = 10 #macd indicator
+long = 21 #macd indicator
+signal = 9 #macd indicator
+
+[rsi]
+low = 40
+high = 40
+persistence = 9
+
+[bbands]
+TimePeriod = 20
+NbDevUp = 2
+NbDevDn = 2
+
+[macd]
+down = -0.025
+up = 0.025
+persistence = 1
