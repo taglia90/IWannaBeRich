@@ -55,10 +55,14 @@ strat.update = function(candle) {
 strat.log = function (candle) {
    var digits = 8;
    
-   //BB logging
    var bb = this.indicators.bb;
-   //BB.lower; BB.upper; BB.middle are your line values 
+   var rsi = this.indicators.rsi;
+   var macd = this.indicators.macd;
+   var diff = macd.diff;
+   var signal = macd.signal.result;
 
+   //BB logging
+   //BB.lower; BB.upper; BB.middle are your line values
    log.debug('______________________________________');
    log.debug('calculated BB properties for candle ', this.nsamples);
 
@@ -72,18 +76,11 @@ strat.log = function (candle) {
    log.debug('\t', 'Band gap: ', bb.upper.toFixed(digits) - bb.lower.toFixed(digits));
 
    //RSI logging
-   var rsi = this.indicators.rsi;
-
    log.debug('calculated RSI properties for candle:');
    log.debug('\t', 'rsi:', rsi.result.toFixed(digits));
    log.debug('\t', 'price:', candle.close.toFixed(digits));
    
    //MACD logging
-   var macd = this.indicators.macd;
-   
-   var diff = macd.diff;
-   var signal = macd.signal.result;
-   
    log.debug('calculated MACD properties for candle:');
    log.debug('\t', 'short:', macd.short.result.toFixed(digits));
    log.debug('\t', 'long:', macd.long.result.toFixed(digits));
