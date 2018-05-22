@@ -7,7 +7,6 @@ var log = require('../core/log.js');
 
 var bb = require('./indicators/BB.js');
 var rsi = require('./indicators/RSI.js');
-var macd = require('./indicators/MACD.js');
 
 // let's create our own strat
 var strat = {};
@@ -32,7 +31,6 @@ strat.init = function () {
   // define the indicators we need
   this.addIndicator('bb', 'BB', this.settings.bbands);
   this.addIndicator('rsi', 'RSI', this.settings.rsi);
-  this.addIndicator('macd', 'MACD', this.settings.macd);
 }
 
 
@@ -57,9 +55,6 @@ strat.log = function (candle) {
    
    var bb = this.indicators.bb;
    var rsi = this.indicators.rsi;
-   var macd = this.indicators.macd;
-   var diff = macd.diff;
-   var signal = macd.signal.result;
 
    //BB logging
    //BB.lower; BB.upper; BB.middle are your line values
@@ -78,15 +73,7 @@ strat.log = function (candle) {
    //RSI logging
    log.debug('calculated RSI properties for candle:');
    log.debug('\t', 'rsi:', rsi.result.toFixed(digits));
-   log.debug('\t', 'price:', candle.close.toFixed(digits));
-   
-   //MACD logging
-   log.debug('calculated MACD properties for candle:');
-   log.debug('\t', 'short:', macd.short.result.toFixed(digits));
-   log.debug('\t', 'long:', macd.long.result.toFixed(digits));
-   log.debug('\t', 'macd:', diff.toFixed(digits));
-   log.debug('\t', 'signal:', signal.toFixed(digits));
-   log.debug('\t', 'macdiff:', macd.result.toFixed(digits));
+   log.debug('\t', 'price:', candle.close.toFixed(digits)); 
 }
 
 // Based on the newly calculated
@@ -100,11 +87,8 @@ strat.check = function (candle) {
   var rsi = this.indicators.rsi;
   var rsiVal = rsi.result;
 
-  var macd = this.indicators.macd;
-  var macddiff = this.indicators.macd.result;
-
   //uptrend
-  if (price <= bb.lower && rsiVal <= this.settings.rsi.low && macddiff > this.settings.macd.up) {
+  if (price <= bb.lower && rsiVal <= this.settings.rsi.low) {
       // new trend detected
       if(this.trend.direction !== 'up'){
          // reset the state for the new trend
@@ -118,7 +102,7 @@ strat.check = function (candle) {
       this.trend.duration++;
       log.debug('In uptrend since', this.trend.duration, 'candle(s)');
 
-      if(this.trend.duration >= this.settings.rsi.persistence && this.trend.duration >= this.settings.macd.persistence){
+      if(this.trend.duration >= this.settings.rsi.persistence){
           this.trend.persisted = true;
       }
 
@@ -132,7 +116,7 @@ strat.check = function (candle) {
   }
   
   //downtrend
-  if (price > bb.middle && rsiVal >= this.settings.rsi.high && macddiff < this.settings.macd.down) {
+  if (price > bb.middle && rsiVal >= this.settings.rsi.high) {
     // new trend detected
     if(this.trend.direction !== 'down'){
       // reset the state for the new trend
@@ -148,7 +132,7 @@ strat.check = function (candle) {
 
     log.debug('In downtrend since', this.trend.duration, 'candle(s)');
 
-    if(this.trend.duration >= this.settings.rsi.persistence && this.trend.duration >= this.settings.macd.persistence){
+    if(this.trend.duration >= this.settings.rsi.persistence){
       this.trend.persisted = true;
     }
 

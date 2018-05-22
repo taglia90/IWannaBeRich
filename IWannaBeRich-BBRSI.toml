@@ -1,0 +1,10 @@
+[rsi]
+interval = 14 #indicator
+low = 40
+high = 60
+persistence = 9
+
+[bbands]
+TimePeriod = 20
+NbDevUp = 2
+NbDevDn = 2
