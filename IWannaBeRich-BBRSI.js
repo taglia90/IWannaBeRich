@@ -14,7 +14,7 @@ var strat = {};
 
 // prepare everything our strat needs
 strat.init = function () {
-  this.name = 'IWannaBeRich';
+  this.name = 'IWannaBeRich-BBRSI';
   this.nsamples = 0;
   this.trend = {
     //zone: 'none',  // none, top, high, low, bottom
