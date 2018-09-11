@@ -174,7 +174,6 @@ strat.check = function (candle) {
 
       if(this.trend.persisted && !this.trend.adviced) {
         this.trend.adviced = true;
-        //this.advice('long');
         this.advice({
           direction: 'long',
           trigger: { // ignored when direction is not "long"
@@ -184,7 +183,6 @@ strat.check = function (candle) {
             // trailValue: 100
           }
         });
-        log.debug('advice long');
       } else
         this.advice();
       
@@ -215,16 +213,6 @@ strat.check = function (candle) {
     if(this.trend.persisted && !this.trend.adviced) {
       this.trend.adviced = true;
       this.advice('short');
-      //log.debug('advice short');
-      this.advice({
-        direction: 'short',
-        trigger: { // ignored when direction is not "long"
-          type: 'trailingStop',
-          trailPercentage: 5
-          // or:
-          // trailValue: 100
-        }
-      });
     } else
       this.advice();
 
