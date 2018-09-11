@@ -8,23 +8,22 @@ var log = require('../core/log.js');
 var bb = require('./indicators/BB.js');
 var rsi = require('./indicators/RSI.js');
 var macd = require('./indicators/MACD.js');
+var cci = require('./indicators/CCI.js');
 
 // let's create our own strat
 var strat = {};
 
+var activeIndicators = 0;
 
 // prepare everything our strat needs
 strat.init = function () {
   this.name = 'IWannaBeRich-MI';
   this.nsamples = 0;
   this.trend = {
-    //zone: 'none',  // none, top, high, low, bottom
     duration: 0,
     persisted: false,
     direction: '', //up, down
-    adviced: false 
-  //  max: 0,
-  //  min: 0
+    adviced: false
   };
 
   this.requiredHistory = this.tradingAdvisor.historySize;
@@ -33,6 +32,12 @@ strat.init = function () {
   this.addIndicator('bb', 'BB', this.settings.bbands);
   this.addIndicator('rsi', 'RSI', this.settings.rsi);
   this.addIndicator('macd', 'MACD', this.settings.macd);
+  this.addIndicator('cci', 'CCI', this.settings.cci);
+
+  if(this.settings.bbands.active) activeIndicators++;
+  if(this.settings.rsi.active) activeIndicators++;
+  if(this.settings.macd.active) activeIndicators++;
+  if(this.settings.cci.active) activeIndicators++;
 }
 
 
@@ -102,6 +107,7 @@ strat.check = function (candle) {
   var bbAdvice = 0
   var rsiAdvice = 0;
   var macdAdvice = 0;
+  var cciAdvice = 0;
   var resultAdvice = 0;
 
   var bb = this.indicators.bb;
@@ -114,6 +120,8 @@ strat.check = function (candle) {
   var macd = this.indicators.macd;
   var macddiff = this.indicators.macd.result;
 
+  var cci = this.indicators.cci;
+
   if(this.settings.bbands.active){
     if(price <= bb.lower) bbAdvice = 2;
     else if (price < bb.middle) bbAdvice = 1;
@@ -124,8 +132,8 @@ strat.check = function (candle) {
   if(this.settings.rsi.active){
     if(rsiVal <= this.settings.rsi.strongLow) rsiAdvice = 2;
     else if(rsiVal < this.settings.rsi.low) rsiAdvice = 1;
-    else if(rsiVal > this.settings.rsi.high) rsiAdvice = -1;
     else if(rsiVal >= this.settings.rsi.strongHigh) rsiAdvice = -2;
+    else if(rsiVal > this.settings.rsi.high) rsiAdvice = -1;
   }
 
   if(this.settings.macd.active){
@@ -133,14 +141,20 @@ strat.check = function (candle) {
     else if(macddiff < this.settings.macd.down) macdAdvice = -2;
   }
 
-  resultAdvice = bbAdvice + rsiAdvice + macdAdvice;
+  if (typeof(cci.result) == 'number' && this.settings.cci.active) {
+    if (cci.result >= this.settings.cci.up) cciAdvice = 2;
+    else if (cci.result <= this.settings.cci.down) cciAdvice = -2;
+  }
+
+  resultAdvice = bbAdvice + rsiAdvice + macdAdvice + cciAdvice;
   log.debug('bbAdvice = ', bbAdvice);
   log.debug('rsiAdvice = ', rsiAdvice);
   log.debug('macdAdvice = ', macdAdvice);
+  log.debug('cciAdvice = ', cciAdvice);
   log.debug('resultAdvice = ', resultAdvice);
   
   //uptrend
-  if (resultAdvice > 0) {
+  if (resultAdvice >= activeIndicators) {
       // new trend detected
       if(this.trend.direction !== 'up'){
          // reset the state for the new trend
@@ -178,7 +192,7 @@ strat.check = function (candle) {
   }
   
   //downtrend
-  if (resultAdvice < 0) {
+  if (resultAdvice <= -activeIndicators) {
     // new trend detected
     if(this.trend.direction !== 'down'){
       // reset the state for the new trend

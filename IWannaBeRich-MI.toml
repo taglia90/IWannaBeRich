@@ -21,3 +21,10 @@ long = 26 #macd indicator
 signal = 9 #macd indicator
 down = -0.025
 up = 0.025
+
+[cci]
+active = true #true/false activate or deactivate cci
+constant = 0.015 #cci indicator # constant multiplier. 0.015 gets to around 70% fit
+history = 90 #cci indicator # history size, make same or smaller than history
+up = 100
+down = -100
